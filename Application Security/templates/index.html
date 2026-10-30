@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AppSec Lab{% if page == "login" %} · Login{% endif %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+{% if page == "dashboard" %}
+
+<div class="app">
+
+    <aside class="sidebar">
+        <a class="brand" href="{{ url_for('home') }}">
+            <span class="brand-logo">◆</span>
+            <span>AppSec <b>Lab</b></span>
+        </a>
+
+        <div class="side-label">WORKSPACE</div>
+        <nav>
+            <a class="nav-item active" href="#overview"><span>⌂</span> Overview</a>
+            <a class="nav-item" href="#controls"><span>◈</span> Security Controls</a>
+            <a class="nav-item" href="#events"><span>◉</span> Security Events</a>
+        </nav>
+
+        <div class="side-label lab-label">LAB TOOLS</div>
+        <nav>
+            <a class="nav-item" href="#lab"><span>⌁</span> Input Validation</a>
+            <a class="nav-item" href="{{ url_for('login') }}"><span>⇥</span> Authentication</a>
+        </nav>
+
+        {% if user and user.role == "admin" %}
+        <div class="side-label">ADMIN</div>
+        <nav>
+            <a class="nav-item" href="{{ url_for('admin') }}" target="_blank"><span>♙</span> Admin API <small>↗</small></a>
+        </nav>
+        {% endif %}
+
+        <div class="sidebar-bottom">
+            <div class="system-status">
+                <span class="green-dot"></span>
+                <div>
+                    <b>System secure</b>
+                    <small>All core controls active</small>
+                </div>
+            </div>
+            {% if user %}
+            <a class="profile" href="{{ url_for('logout') }}">
+                <span class="avatar">{{ user.display_name[0] }}</span>
+                <span class="profile-name"><b>{{ user.display_name }}</b><small>{{ user.role }}</small></span>
+                <span class="logout">↪</span>
+            </a>
+            {% else %}
+            <a class="profile" href="{{ url_for('login') }}">
+                <span class="avatar">?</span>
+                <span class="profile-name"><b>Guest</b><small>Sign in to lab</small></span>
+                <span class="logout">→</span>
+            </a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <span class="crumb">APPLICATION SECURITY</span>
+                <h1>Security overview</h1>
+            </div>
+            <div class="top-actions">
+                <span class="live"><i></i> LAB ONLINE</span>
+                {% if user %}
+                    <a class="top-user" href="{{ url_for('logout') }}">{{ user.display_name }} <span>↪</span></a>
+                {% else %}
+                    <a class="login-button" href="{{ url_for('login') }}">Sign in →</a>
+                {% endif %}
+            </div>
+        </header>
+
+        <section class="content" id="overview">
+
+            <div class="intro">
+                <div>
+                    <h2>Application security at a glance.</h2>
+                    <p>Explore the controls implemented in this Flask security demonstration.</p>
+                </div>
+                <span class="updated">● Protection active</span>
+            </div>
+
+            <div class="metrics">
+                <article class="metric primary-metric">
+                    <div class="metric-icon">◈</div>
+                    <div class="metric-label">SECURITY POSTURE</div>
+                    <strong>88<span>%</span></strong>
+                    <small>Strong baseline</small>
+                </article>
+
+                <article class="metric">
+                    <div class="metric-icon green">✓</div>
+                    <div class="metric-label">ACTIVE CONTROLS</div>
+                    <strong>8<span>/9</span></strong>
+                    <small>Core protections</small>
+                </article>
+
+                <article class="metric">
+                    <div class="metric-icon yellow">!</div>
+                    <div class="metric-label">RECENT EVENTS</div>
+                    <strong>{{ events|length }}<span></span></strong>
+                    <small>Visible in lab</small>
+                </article>
+
+                <article class="metric">
+                    <div class="metric-icon purple">♙</div>
+                    <div class="metric-label">ACCESS LEVEL</div>
+                    <strong>{% if user %}1{% else %}0{% endif %}<span></span></strong>
+                    <small>{% if user %}Authenticated{% else %}Guest{% endif %}</small>
+                </article>
+            </div>
+
+
+            <div class="section-title" id="controls">
+                <div>
+                    <span>DEFENSE LAYERS</span>
+                    <h2>Security controls</h2>
+                </div>
+                <p>Click-worthy controls with a clear status instead of decorative filler.</p>
+            </div>
+
+            <div class="control-grid">
+                {% for control in controls %}
+                <article class="control-card">
+                    <div class="control-head">
+                        <span class="control-number">0{{ loop.index }}</span>
+                        <span class="badge good">ACTIVE</span>
+                    </div>
+                    <div class="control-symbol">
+                        {% if control[2] == "AUTH" %}◉
+                        {% elif control[2] == "RBAC" %}♙
+                        {% elif control[2] == "INPUT" %}⌁
+                        {% elif control[2] == "HTTP" %}↯
+                        {% elif control[2] == "SESSION" %}◌
+                        {% else %}✓{% endif %}
+                    </div>
+                    <h3>{{ control[0] }}</h3>
+                    <p>{{ control[1] }}</p>
+                    <span class="tag">{{ control[2] }}</span>
+                </article>
+                {% endfor %}
+            </div>
+
+
+            <div class="two-column" id="events">
+
+                <section class="panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>LIVE FEED</span>
+                            <h2>Security events</h2>
+                        </div>
+                        <span class="count">{{ events|length }}</span>
+                    </div>
+
+                    <div class="event-list">
+                        {% for event in events %}
+                        <div class="event-row">
+                            <span class="event-dot {{ event.level }}"></span>
+                            <div class="event-main">
+                                <b>{{ event.message }}</b>
+                                <small>{{ event.type }}</small>
+                            </div>
+                            <time>{{ event.time }}</time>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+
+                <section class="panel posture-panel">
+                    <div class="panel-title">
+                        <div>
+                            <span>STATUS</span>
+                            <h2>Protection map</h2>
+                        </div>
+                        <span class="shield">✓</span>
+                    </div>
+
+                    <div class="protection-list">
+                        <div><span>Authentication</span><b>Protected</b></div>
+                        <div><span>Authorization</span><b>Protected</b></div>
+                        <div><span>Input validation</span><b>Protected</b></div>
+                        <div><span>Security headers</span><b>Active</b></div>
+                        <div><span>Content Security Policy</span><b>Active</b></div>
+                    </div>
+                </section>
+
+            </div>
+
+
+            <section class="lab" id="lab">
+                <div class="lab-header">
+                    <div>
+                        <span>HANDS-ON SECURITY LAB</span>
+                        <h2>Input validation playground</h2>
+                        <p>Send input through the server-side validation layer and see the result in the event feed.</p>
+                    </div>
+                    <div class="lab-method">POST <b>/notes</b></div>
+                </div>
+
+                {% if user %}
+                <div class="lab-body">
+                    <form method="POST" action="{{ url_for('add_note') }}">
+                        <label for="note">Test input</label>
+                        <textarea id="note" name="note" maxlength="500" placeholder="Type a normal note, or test a suspicious payload..."></textarea>
+                        <div class="form-bottom">
+                            <small>Maximum 500 characters · Server-side validation</small>
+                            <button class="run-button" type="submit">Run validation <span>→</span></button>
+                        </div>
+                    </form>
+
+                    <div class="saved">
+                        <div class="saved-head">YOUR SAVED NOTES</div>
+                        {% for note in notes %}
+                        <div class="saved-row"><span>✓</span>{{ note }}</div>
+                        {% else %}
+                        <div class="empty">Nothing saved yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="login-lab">
+                    <div class="lock">⌁</div>
+                    <div>
+                        <b>Authentication required</b>
+                        <p>Sign in to use the interactive validation playground.</p>
+                    </div>
+                    <a class="run-button" href="{{ url_for('login') }}">Sign in →</a>
+                </div>
+                {% endif %}
+            </section>
+
+        </section>
+
+        <footer>
+            <span>AppSec Lab · Flask security demonstration</span>
+            <span>Server-side controls enabled</span>
+        </footer>
+    </main>
+</div>
+
+
+{% elif page == "login" %}
+
+<div class="login-page">
+    <div class="login-card">
+        <a class="brand login-brand" href="{{ url_for('home') }}">
+            <span class="brand-logo">◆</span>
+            <span>AppSec <b>Lab</b></span>
+        </a>
+
+        <div class="login-kicker">SECURE ACCESS</div>
+        <h1>Welcome back.</h1>
+        <p>Authenticate to access the application security lab.</p>
+
+        {% if error %}
+        <div class="login-error"><b>!</b><span>{{ error }}</span></div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('login') }}">
+            <label for="username">Username</label>
+            <input id="username" name="username" autocomplete="username" placeholder="Enter username" required>
+
+            <label for="password">Password</label>
+            <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter password" required>
+
+            <button class="run-button login-submit" type="submit">Authenticate <span>→</span></button>
+        </form>
+
+        <div class="demo">
+            <span>DEMO ACCOUNTS</span>
+            <p><b>Charan</b> · user</p>
+            <p><b>admin</b> · administrator</p>
+        </div>
+
+        <a class="back-home" href="{{ url_for('home') }}">← Return to dashboard</a>
+    </div>
+</div>
+
+
+{% else %}
+
+<div class="error-page">
+    <span class="error-number">{{ error_code }}</span>
+    <div class="login-kicker">SYSTEM RESPONSE</div>
+    <h1>{{ error_message }}</h1>
+    <a class="run-button" href="{{ url_for('home') }}">Return to dashboard →</a>
+</div>
+
+{% endif %}
+
+</body>
+</html>
